@@ -58,6 +58,45 @@ public class RTree{
 			insertar(r, root.sons[index]);*/
 		}		
 	}
+	public Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
+		Rectangle[] result = new Rectangle[2];
+		double max = -1;
+		double mininc = -1;
+		double aux;
+		double inc, a1, a2;
+		for(int i = 0; i < 4; i++){
+			inc = r.getIncreasedArea(rs[i]);
+			a1 = r.getArea();
+			a2 = rs[i].getArea();
+			aux = inc - (a1+a2);
+			if(aux > max || (aux == max && mininc > inc)){
+				max = aux;
+				mininc = inc;
+				result[0] = r;
+				result[1] = rs[i];
+			}
+		}
+		max = -1;
+		mininc = -1;
+		for(int i = 0; i < 4; i++){
+			for(int j = i+1; j < 4; j++){
+				inc = rs[i].getIncreasedArea(rs[j]);
+				a1 = rs[i].getArea();
+				a2 = rs[j].getArea();
+				aux = inc - (a1+a2);
+				if(aux > max || (aux == max && mininc > inc)){
+					max = aux;
+					mininc = inc;
+					result[0] = rs[i];
+					result[1] = rs[j];
+				}
+			}
+		}
+		return result;
+	}
+	public void QuadraticSplit(Rectangle r, Node node){
+		
+	}
 	public static void main(String[] args){
 		Node node = new Node();
 		Rectangle r = new Rectangle(new Vertex(2,2),1,1);

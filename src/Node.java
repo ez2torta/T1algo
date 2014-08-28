@@ -1,7 +1,9 @@
 public class Node{
 	Node sons[];
 	Rectangle rectangles[];
+	Node father;
 	public Node(){
+		father = null;
 		sons = new Node[4];
 		rectangles = new Rectangle[4];
 	}
