@@ -30,9 +30,11 @@ public class RTree{
 	}
 	public static void buscarAux(Rectangle r, Node root, int lvl){
 		for(int i = 0; i < 2*t; i++){
-			if(intersect(r,root.rectangles[i]) && root.sons[i] == null && lvl == maxlvl)
+			if(root.rectangles[i] == null)
+				continue;
+			else if(intersect(r,root.rectangles[i]) && root.sons[i] == null && lvl == maxlvl)
 				rectangulos.add(root.rectangles[i]);
-			if(intersect(r,root.rectangles[i]) && root.sons[i] != null){
+			else if(intersect(r,root.rectangles[i]) && root.sons[i] != null){
 				for(int j = 0; j < 2*t; j++)
 					buscarAux(r, root.sons[j], lvl+1);
 			}
@@ -56,33 +58,18 @@ public class RTree{
 			insertar(r, root.sons[index]);*/
 		}		
 	}
-	public static void insertar2(Rectangle r, Node raiz){
-		if(raiz.rectangles[0] == null)
-			raiz.rectangles[0] = r;
-		else{
-			raiz.sons[0] = new Node();
-			insertar2(r, raiz.sons[0]);
-		}
-	}
 	public static void main(String[] args){
 		Node node = new Node();
 		Rectangle r = new Rectangle(new Vertex(2,2),1,1);
 		Rectangle s = new Rectangle(new Vertex(1,2),3,3);
 		Rectangle t = new Rectangle(new Vertex(3,2),1,2);
 		Rectangle u = new Rectangle(new Vertex(1,2),3,1);
-		/*node.rectangles[0] = r;
-		node.rectangles[1] = s;
-		node.rectangles[2] = t;
-		node.rectangles[3] = u;*/
-		insertar2(r, node);
-		insertar2(s, node);
-		insertar2(t, node);
-		insertar2(u, node);
-		buscar(u, node);
-		/*System.out.println(node.rectangles[0].v[0].xpos+" "+r.v[0].ypos);
-		System.out.println(node.rectangles[0].v[1].xpos+" "+r.v[1].ypos);
-		System.out.println(node.rectangles[0].v[2].xpos+" "+r.v[2].ypos);
-		System.out.println(node.rectangles[0].v[3].xpos+" "+r.v[3].ypos);*/
-		System.out.println(((Rectangle)rectangulos.get(0)).v[0].ypos);
+		Rectangle x = new Rectangle(new Vertex(1,3),1,1);
+		insertar(r, node);
+		insertar(s, node);
+		insertar(t, node);
+		//insertar(u, node);
+		buscar(r, node);
+		System.out.println(rectangulos.size());
 	}
 }
