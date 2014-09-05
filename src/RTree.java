@@ -54,11 +54,11 @@ public class RTree{
 				root.split();*/
 		}
 		else{
-			/*int index = root.nextSon(r);
-			insertar(r, root.sons[index]);*/
-		}		
+			int index = minIncrement(r, root.rectangles);
+			insertar(r, root.sons[index]);
+		}
 	}
-	public Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
+	public static Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
 		Rectangle[] result = new Rectangle[2];
 		double max = -1;
 		double mininc = -1;
@@ -76,8 +76,8 @@ public class RTree{
 				result[1] = rs[i];
 			}
 		}
-		max = -1;
-		mininc = -1;
+		//max = -1;
+		//mininc = -1;
 		for(int i = 0; i < 4; i++){
 			for(int j = i+1; j < 4; j++){
 				inc = rs[i].getIncreasedArea(rs[j]);
@@ -94,21 +94,63 @@ public class RTree{
 		}
 		return result;
 	}
+	public static int minIncrement(Rectangle r, Rectangle[] rs){
+		int result = -1;
+		double min = Double.MAX_VALUE;
+		double mininc = -1;
+		double aux;
+		double inc, a1, a2;
+		for(int i = 0; i < 4; i++){
+			inc = r.getIncreasedArea(rs[i]);
+			a1 = r.getArea();
+			a2 = rs[i].getArea();
+			aux = inc - (a1+a2);
+			if(aux < min || (aux == min && mininc > inc)){
+				min = aux;
+				mininc = inc;
+				result = i;
+			}
+		}
+		//max = -1;
+		//mininc = -1;
+		/*for(int i = 0; i < 4; i++){
+			for(int j = i+1; j < 4; j++){
+				inc = rs[i].getIncreasedArea(rs[j]);
+				a1 = rs[i].getArea();
+				a2 = rs[j].getArea();
+				aux = inc - (a1+a2);
+				if(aux < min || (aux == min && mininc > inc)){
+					min = aux;
+					mininc = inc;
+					result[0] = rs[i];
+					result[1] = rs[j];
+				}
+			}
+		}*/
+		return result;
+	}
 	public void QuadraticSplit(Rectangle r, Node node){
 		
 	}
 	public static void main(String[] args){
 		Node node = new Node();
-		Rectangle r = new Rectangle(new Vertex(2,2),1,1);
-		Rectangle s = new Rectangle(new Vertex(1,2),3,3);
-		Rectangle t = new Rectangle(new Vertex(3,2),1,2);
-		Rectangle u = new Rectangle(new Vertex(1,2),3,1);
-		Rectangle x = new Rectangle(new Vertex(1,3),1,1);
+		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
+		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
+		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
+		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
+		Rectangle x = new Rectangle(new Vertex(8,8),1,1);
 		insertar(r, node);
 		insertar(s, node);
 		insertar(t, node);
+		insertar(u, node);
+		insertar(x, node);
 		//insertar(u, node);
 		buscar(r, node);
+		Rectangle[] recs;
+		recs = maxIncrement(x, node.rectangles);
 		System.out.println(rectangulos.size());
+		System.out.println(recs[0].toString()+' '+ recs[1].toString());
+		int index = minIncrement(x, node.rectangles);
+		System.out.println(node.rectangles[index].toString());
 	}
 }
