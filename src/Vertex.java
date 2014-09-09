@@ -1,7 +1,7 @@
 public class Vertex{
-	double xpos;
-	double ypos;
-	public Vertex(double x, double y){
+	int xpos;
+	int ypos;
+	public Vertex(int x, int y){
 		this.xpos = x;
 		this.ypos = y;
 	}

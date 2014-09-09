@@ -1,7 +1,6 @@
-import java.math.*;
 public class Rectangle{
 	Vertex[] v;
-	public Rectangle(Vertex v2, double ancho, double altura){
+	public Rectangle(Vertex v2, int ancho, int altura){
 		v = new Vertex[4];
 		this.v[0] = new Vertex(v2.xpos,v2.ypos);
 		this.v[1] = new Vertex(v2.xpos,v2.ypos+altura);
