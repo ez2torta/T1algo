@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 public class RTree2{
-	public static int t = 2;
+	public static int t = 15;
 	private static int maxlvl = 0;
 	private static ArrayList<Node2> tree = new ArrayList<Node2>();
 	private static ArrayList<Rectangle> rectangulos = new ArrayList<Rectangle>();
@@ -25,20 +25,20 @@ public class RTree2{
 		if(lvl > maxlvl)
 			maxlvl = lvl;
 		for(int i = 0; i < 15; i++){
-			if(tree.get(root).getSon(i) < tree.size())
-				RTreeHeight(tree.get(root).getSon(i), lvl+1);
+			if(tree.get(root).getSonPos(i) < tree.size())
+				RTreeHeight(tree.get(root).getSonPos(i), lvl+1);
 		}
 	}
 	public static void buscarAux(Rectangle r, int root, int lvl){
 		for(int i = 0; i < 2*t; i++){
-			Node2 aux = tree.get(tree.get(root).getSon(i));
+			Node2 aux = tree.get(tree.get(root).getSonPos(i));
 			if(tree.get(root).rectangles[i] == null)
 				continue;
 			else if(intersect(r,tree.get(root).rectangles[i]) && aux == null && lvl == maxlvl)
 				rectangulos.add(tree.get(root).rectangles[i]);
 			else if(intersect(r,tree.get(root).rectangles[i]) && aux != null){
 				for(int j = 0; j < 2*t; j++)
-					buscarAux(r, tree.get(root).getSon(j), lvl+1);
+					buscarAux(r, tree.get(root).getSonPos(j), lvl+1);
 			}
 		}
 	}
@@ -57,7 +57,7 @@ public class RTree2{
 		}
 		else{
 			int index = minIncrement(r, tree.get(root).rectangles);
-			insertar(r, tree.get(root).getSon(index));
+			insertar(r, tree.get(root).getSonPos(index));
 		}
 	}
 	public static Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
@@ -135,7 +135,7 @@ public class RTree2{
 		
 	}
 	public static void main(String[] args){
-		Node2 node = new Node2(0);
+		Node2 node = new Node2(0,1);
 		tree.add(node);
 		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
 		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
