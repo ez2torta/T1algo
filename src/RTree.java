@@ -54,20 +54,10 @@ public class RTree extends NodeSize{
 			return true;
 		return false;
 	}
-	/*public void RTreeHeight(long root, int lvl){
-		if(lvl > this.maxlvl)
-			this.maxlvl = lvl;
-		for(int i = 0; i < 15; i++){
-			if(tree.get(root).getSonPos(i) < tree.size())
-				RTreeHeight(tree.get(root).getSonPos(i), lvl+1);
-		}
-	}*/
 	public void buscar(Rectangle r, long pos) throws IOException{
 		Node aux = loadNode(pos);
 		for(int i = 0; i < aux.numRectangles; i++){
 			long sonDir = aux.sonsPos[i];
-			/*if(aux.rectangles[i] == null)
-				continue;*/
 			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
 				buscarResult.add(aux.rectangles[i]);
 			else if(intersect(r,aux.rectangles[i]) && sonDir >= 0 && aux.isLeaf == 0){
@@ -164,32 +154,31 @@ public class RTree extends NodeSize{
 	public static void main(String[] args) throws IOException{
 		RTree tree = new RTree();
 		Node node = new Node(0,1);
+		tree.saveNode(node);
 		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
 		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
 		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
 		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
-		//Rectangle x = new Rectangle(new Vertex(8,8),1,1);
-		node.putRectangle(r);
-		node.putRectangle(s);
-		node.putRectangle(t);
-		node.putRectangle(u);
-		tree.saveNode(node);
-		Node node2 = tree.loadNode(0);
-		System.out.println(node.numRectangles);
-		System.out.println(node2.numRectangles);
-		System.out.println(node.rectangles[0].toString());
-		System.out.println(node2.rectangles[0].toString());
-		System.out.println(node.sonsPos[29]);
-		System.out.println(node2.sonsPos[29]);
-		System.out.println(tree.RAMBuf.length);
-		
-		/*tree.insertar(r, 0);
+		Rectangle x = new Rectangle(new Vertex(8,8),1,1);
+		tree.insertar(r, 0);
 		tree.insertar(s, 0);
 		tree.insertar(t, 0);
 		tree.insertar(u, 0);
 		tree.insertar(x, 0);
+		/*node.putRectangle(r);
+		node.putRectangle(s);
+		node.putRectangle(t);
+		node.putRectangle(u);
 		tree.buscar(s, 0);
-		Rectangle[] recs;
+		tree.saveNode(node);*/
+		node = tree.loadNode(0);
+		tree.saveNode(node);
+		System.out.println(node.numRectangles);
+		System.out.println(node.rectangles[2].toString());
+		System.out.println(node.sonsPos[29]);
+		System.out.println(tree.RAMBuf.length);
+		
+		/*Rectangle[] recs;
 		recs = maxIncrement(x, node);
 		System.out.println(recs[0].toString()+' '+ recs[1].toString());
 		int index = minIncrement(x, node);

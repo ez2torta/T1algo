@@ -2,10 +2,10 @@ import java.nio.ByteBuffer;
 
 public class Node extends NodeSize{
 	long pos;
-	long sonsPos[];
 	int isLeaf;
 	int numRectangles;
 	Rectangle rectangles[];
+	long sonsPos[];
 	public Node(long pos, int isLeaf){
 		this.pos = pos;
 		this.isLeaf = 1;
@@ -13,7 +13,7 @@ public class Node extends NodeSize{
 		this.rectangles = new Rectangle[2*t];
 		this.sonsPos = new long[2*t];
 		for(int i = 0; i < 2*t; i++)
-			sonsPos[i] = -1;
+			sonsPos[i] = -1L;
 	}
 	public Node(byte[] file){
 		int bytePos = 0;
@@ -33,9 +33,11 @@ public class Node extends NodeSize{
 			xmax = ByteBuffer.wrap(file, bytePos, 4).getInt();
 			bytePos += 4;
 			ymax = ByteBuffer.wrap(file, bytePos, 4).getInt();
-			bytePos += 4;
+			bytePos += 12;
 			rectangles[i] = new Rectangle(new Vertex(xmin,ymin), (xmax-xmin), (ymax-ymin));
+			//System.out.println(i+" "+this.rectangles[i].toString());
 		}
+		//bytePos += 2*t*32 - this.numRectangles*32;
 		sonsPos = new long[2*t];
 		for (int i = 0; i < 2*t; i++) {
 			sonsPos[i] =  ByteBuffer.wrap(file, bytePos, 8).getLong();
@@ -89,8 +91,6 @@ public class Node extends NodeSize{
 		ByteBuffer.wrap(file, bytePos, 4).putInt(this.numRectangles);
 		bytePos += 4;
 		for (int i = 0; i < this.numRectangles; i++) {
-			//this.rectangles[i].rectBufFill(bytePos, file);
-			//bytePos += 32;
 			for(int j = 0; j < 4; j++){
 				ByteBuffer.wrap(file, bytePos, 4).putInt(this.rectangles[i].v[j].xpos);
 				bytePos += 4;
@@ -98,10 +98,9 @@ public class Node extends NodeSize{
 				bytePos += 4;
 			}
 		}
-		//bytepos += (maxElem - numeroNodos) * 16 * dimension;
-		sonsPos = new long[2*t];
+		//bytePos += 2*t*32 - this.numRectangles*32;
 		for (int i = 0; i < 2*t; i++) {
-			sonsPos[i] =  ByteBuffer.wrap(file, bytePos, 8).getLong();
+			ByteBuffer.wrap(file, bytePos, 8).putLong(this.sonsPos[i]);
 			bytePos +=8;
 		}
 	}
