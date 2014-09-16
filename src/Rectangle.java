@@ -7,11 +7,10 @@ public class Rectangle{
 		this.v[2] = new Vertex(v2.xpos+ancho,v2.ypos+altura);
 		this.v[3] = new Vertex(v2.xpos+ancho,v2.ypos);
 	}
-	public double getArea(){
+	public int getArea(){
 		return (this.v[3].xpos-this.v[0].xpos)*(this.v[1].ypos-this.v[0].ypos);
 	}
-	public double getIncreasedArea(Rectangle r){
-		/* Aplicar max o min */
+	public int getIncreasedArea(Rectangle r){
 		return (Math.max(this.v[3].xpos, r.v[3].xpos) - Math.min(this.v[0].xpos, r.v[0].xpos)) * (Math.max(this.v[1].ypos, r.v[1].ypos) - Math.min(this.v[0].ypos, r.v[0].ypos));
 	}
 	public String toString(){

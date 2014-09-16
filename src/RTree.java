@@ -7,26 +7,24 @@ public class RTree extends NodeSize{
 	ArrayList<Rectangle> buscarResult;
 	ArrayList<Long> tree;
 	RandomAccessFile raf;
-	long ExtDir;
+	long nextDir;
 	byte[] RAMBuf;
 	public RTree() throws FileNotFoundException{
 		this.maxlvl = 0;
 		this.buscarResult = new ArrayList<Rectangle>();
 		this.tree = new ArrayList<Long>();
 		this.raf = new RandomAccessFile("rtree.obj","rw");
-		this.ExtDir = 0;
+		this.nextDir = 0;
 		this.RAMBuf = new byte[2*B];
 	}
-	public Node loadNode(long pos) throws IOException{
+	public Node nodeToRAM(long pos) throws IOException{
 		readExtMem(pos,RAMBuf);
 		Node n = new Node(RAMBuf);
 		return n;
 	}
-	public void saveNode(Node n) throws IOException{
-		//ExtDir = n.pos;
+	public void nodeToExt(Node n) throws IOException{
 		n.nodeBufFill(RAMBuf);
-		writeExtMem(ExtDir, RAMBuf);
-		
+		writeExtMem(n.pos, RAMBuf);
 	}
 	private void writeExtMem(long pos, byte[] file) throws IOException{
 		raf.seek(pos);
@@ -55,7 +53,7 @@ public class RTree extends NodeSize{
 		return false;
 	}
 	public void buscar(Rectangle r, long pos) throws IOException{
-		Node aux = loadNode(pos);
+		Node aux = nodeToRAM(pos);
 		for(int i = 0; i < aux.numRectangles; i++){
 			long sonDir = aux.sonsPos[i];
 			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
@@ -67,18 +65,23 @@ public class RTree extends NodeSize{
 		}
 	}
 	public void insertar(Rectangle r, long pos) throws IOException{
-		Node aux = loadNode(pos);
+		Node aux = nodeToRAM(pos);
 		if(aux.isLeaf == 1){
-			aux.putRectangle(r);
-			saveNode(aux);
+			if(aux.numRectangles < 2*t){
+				aux.putRectangle(r);
+				nodeToExt(aux);
+			}
+			else{
+				System.out.println("kek");
+			}
 		}
 		else{
-			int index = minIncrement(r, aux);
+			int index = this.minIncrement(r, aux);
 			insertar(r, aux.sonsPos[index]);
 		}
 	}
-	public static Rectangle[] maxIncrement(Rectangle r, Node node){
-		Rectangle[] result = new Rectangle[2];
+	public int[] maxIncrement(Rectangle r, Node node){
+		int[] result = new int[2];
 		double max = -1;
 		double mininc = -1;
 		double aux;
@@ -91,8 +94,8 @@ public class RTree extends NodeSize{
 			if(aux > max || (aux == max && mininc > inc)){
 				max = aux;
 				mininc = inc;
-				result[0] = r;
-				result[1] = node.rectangles[i];
+				result[0] = -1;
+				result[1] = i;
 			}
 		}
 		//max = -1;
@@ -106,14 +109,14 @@ public class RTree extends NodeSize{
 				if(aux > max || (aux == max && mininc > inc)){
 					max = aux;
 					mininc = inc;
-					result[0] = node.rectangles[i];
-					result[1] = node.rectangles[j];
+					result[0] = i;
+					result[1] = j;
 				}
 			}
 		}
 		return result;
 	}
-	public static int minIncrement(Rectangle r, Node node){
+	public int minIncrement(Rectangle r, Node node){
 		int result = -1;
 		double min = Double.MAX_VALUE;
 		double mininc = -1;
@@ -148,14 +151,58 @@ public class RTree extends NodeSize{
 		}*/
 		return result;
 	}
-	public void QuadraticSplit(Rectangle r, int node){
-		
+	public void QuadraticSplit(Rectangle r, Node node){
+		int[] maxRs = this.maxIncrement(r, node);
+		Node son1 = new Node(nextDir,node.isLeaf);
+		nextDir++;
+		Node son2 = new Node(nextDir,node.isLeaf);
+		nextDir++;
+		/* Si el rectángulo a insertarse no es semilla, se mete al arreglo en lugar de la semilla. */
+		if(maxRs[0] != -1)
+			node.rectangles[maxRs[0]] = r;
+		/* Se borra del arreglo el otro nodo semilla. */
+		node.rectangles[maxRs[1]] = null;
+		/* Se guardan las semillas en los nodos nuevos. */
+		if(maxRs[0] == -1)
+			son1.putRectangle(r);
+		else
+			son1.putRectangle(node.rectangles[maxRs[0]]);
+		son2.putRectangle(node.rectangles[maxRs[1]]);
+		int bestDif = -1;
+		int g1, g2;
+		for(int i = 0; i < 2*t; i++){
+			if(son1.numRectangles == t+1){
+				for(int j = i; j < 2*t+1; i++){
+					if(node.rectangles[j] != null)
+						son2.putRectangle(node.rectangles[j]);
+				}
+				return;
+			}
+			else if(son2.numRectangles == t+1){
+				for(int j = i; j < 2*t+1; i++){
+					if(node.rectangles[j] != null)
+						son1.putRectangle(node.rectangles[j]);
+				}
+				return;
+			}
+			for(int j = i+1; j < 2*t+1; j++){
+				g1 = son1.areaMBR();
+			}
+		}	
+		if(node.pos == 0){ // si es la raiz
+			Node newRoot = new Node(0,0);
+			newRoot.sonsPos[0] = son1.pos;
+			newRoot.sonsPos[1] = son2.pos;
+		}
+	}
+	public int numRandom(int min, int max){
+		return ((int)(Math.random()*max-min));
 	}
 	public static void main(String[] args) throws IOException{
 		RTree tree = new RTree();
 		Node node = new Node(0,1);
-		tree.saveNode(node);
-		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
+		tree.nodeToExt(node);
+		/*Rectangle r = new Rectangle(new Vertex(0,0),4,4);
 		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
 		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
 		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
@@ -165,17 +212,33 @@ public class RTree extends NodeSize{
 		tree.insertar(t, 0);
 		tree.insertar(u, 0);
 		tree.insertar(x, 0);
-		tree.buscar(s, 0);
-		node = tree.loadNode(0);
-		System.out.println("numRectangles: "+node.numRectangles);
+		tree.buscar(s, 0);*/
+		int x1,y1,w,h;
+		Rectangle r;
+		for(int i = 0; i < 2*tree.t; i++){
+			x1 = tree.numRandom(0, 90);
+			y1 = tree.numRandom(0, 90);
+			w = tree.numRandom(0, 10);
+			h = tree.numRandom(0, 10);
+			r = new Rectangle(new Vertex(x1,y1),w,h);
+			tree.insertar(r, 0);
+		}
+		tree.buscar(new Rectangle(new Vertex(0,0),20,20),0);
+		node = tree.nodeToRAM(0);
+		for(int i = 0; i < 2*tree.t; i++)
+			System.out.println("Node "+i+": "+node.rectangles[i].toString());
+		for(int i = 0; i < tree.buscarResult.size(); i++)
+			System.out.println("buscarResult "+i+": "+tree.buscarResult.get(i));
+		/*System.out.println("numRectangles: "+node.numRectangles);
 		System.out.println("rect t: "+node.rectangles[2].toString());
 		System.out.println("lastSonPos: "+node.sonsPos[29]);
 		System.out.println("RAMBuf length: "+tree.RAMBuf.length);
-		
+		System.out.println("buscarResult: "+tree.buscarResult.size());
 		Rectangle[] recs;
-		recs = maxIncrement(x, node);
+		recs = tree.maxIncrement(x, node);
 		System.out.println("maxIncrement: "+recs[0].toString()+" - "+ recs[1].toString());
-		int index = minIncrement(x, node);
-		System.out.println("minIncrement(x): "+node.rectangles[index].toString());
+		int index = tree.minIncrement(x, node);
+		System.out.println("minIncrement(x): "+node.rectangles[index].toString());*/
+		//System.out.println(tree.numRandom(0,100));
 	}
 }

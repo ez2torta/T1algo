@@ -44,15 +44,6 @@ public class Node extends NodeSize{
 			bytePos +=8;
 		}
 	}
-	public int numRectangles(){
-		int i = 0;
-		while(i < 2*t){
-			if(this.rectangles[i] == null)
-				break;
-			i++;
-		}
-		return i;
-	}
 	public void putRectangle(Rectangle r){
 		if(this.numRectangles < 2*t){
 			this.rectangles[this.numRectangles] =  r;
@@ -69,15 +60,6 @@ public class Node extends NodeSize{
 			return true;
 		return false;
 	}
-	/* Obtiene el nodo padre */
-	/*public int getFather(){
-		if(pos == 0)
-			return -1;
-		else if(pos%4 == 0)
-			return (pos/4)-1;
-		else
-			return pos/4;
-	}*/
 	/* Obtiene el nodo hijo en la posición indicada entre 0 y 15 */
 	public long getSonPos(int index){
 		return this.sonsPos[index];
@@ -103,6 +85,44 @@ public class Node extends NodeSize{
 			ByteBuffer.wrap(file, bytePos, 8).putLong(this.sonsPos[i]);
 			bytePos +=8;
 		}
+	}
+	public Rectangle getMBR(){
+		if(this.numRectangles == 0)
+			return null;
+		int xmin = this.rectangles[0].v[0].xpos;
+		int ymin = this.rectangles[0].v[0].ypos;
+		int xmax = this.rectangles[0].v[2].xpos;
+		int ymax = this.rectangles[0].v[2].ypos;
+		for(int i = 1; i < this.numRectangles; i++){
+			if (this.rectangles[i].v[0].xpos < xmin)
+				xmin = this.rectangles[i].v[0].xpos;
+			if (this.rectangles[i].v[0].ypos < ymin)
+				ymin = this.rectangles[i].v[0].ypos;
+			if (this.rectangles[i].v[2].xpos > xmax)
+				xmax = this.rectangles[i].v[0].xpos;
+			if (this.rectangles[i].v[2].xpos > ymax)
+				ymax = this.rectangles[i].v[0].ypos;
+		}
+		return new Rectangle(new Vertex(xmin,ymin),xmax-xmin,ymax-ymin);
+	}
+	public int areaMBR(){
+		if(this.numRectangles == 0)
+			return 0;
+		int xmin = this.rectangles[0].v[0].xpos;
+		int ymin = this.rectangles[0].v[0].ypos;
+		int xmax = this.rectangles[0].v[2].xpos;
+		int ymax = this.rectangles[0].v[2].ypos;
+		for(int i = 1; i < this.numRectangles; i++){
+			if (this.rectangles[i].v[0].xpos < xmin)
+				xmin = this.rectangles[i].v[0].xpos;
+			if (this.rectangles[i].v[0].ypos < ymin)
+				ymin = this.rectangles[i].v[0].ypos;
+			if (this.rectangles[i].v[2].xpos > xmax)
+				xmax = this.rectangles[i].v[0].xpos;
+			if (this.rectangles[i].v[2].xpos > ymax)
+				ymax = this.rectangles[i].v[0].ypos;
+		}
+		return (xmax-xmin)*(ymax-ymin);
 	}
 	public static void main(String[] args) throws Exception{
 		Node node = new Node(0,1);
