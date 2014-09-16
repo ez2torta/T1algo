@@ -78,62 +78,61 @@ public class RTree extends NodeSize{
 	}
 	public void insertar(Rectangle r, long pos) throws IOException{
 		Node aux = loadNode(pos);
-		//int n = aux.numRectangles;
 		if(aux.isLeaf == 1){
 			aux.putRectangle(r);
 			saveNode(aux);
 		}
 		else{
-			int index = minIncrement(r, aux.rectangles);
+			int index = minIncrement(r, aux);
 			insertar(r, aux.sonsPos[index]);
 		}
 	}
-	public static Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
+	public static Rectangle[] maxIncrement(Rectangle r, Node node){
 		Rectangle[] result = new Rectangle[2];
 		double max = -1;
 		double mininc = -1;
 		double aux;
 		double inc, a1, a2;
-		for(int i = 0; i < 4; i++){
-			inc = r.getIncreasedArea(rs[i]);
+		for(int i = 0; i < node.numRectangles; i++){
+			inc = r.getIncreasedArea(node.rectangles[i]);
 			a1 = r.getArea();
-			a2 = rs[i].getArea();
+			a2 = node.rectangles[i].getArea();
 			aux = inc - (a1+a2);
 			if(aux > max || (aux == max && mininc > inc)){
 				max = aux;
 				mininc = inc;
 				result[0] = r;
-				result[1] = rs[i];
+				result[1] = node.rectangles[i];
 			}
 		}
 		//max = -1;
 		//mininc = -1;
 		for(int i = 0; i < 4; i++){
-			for(int j = i+1; j < 4; j++){
-				inc = rs[i].getIncreasedArea(rs[j]);
-				a1 = rs[i].getArea();
-				a2 = rs[j].getArea();
+			for(int j = i+1; j < node.numRectangles; j++){
+				inc = node.rectangles[i].getIncreasedArea(node.rectangles[j]);
+				a1 = node.rectangles[i].getArea();
+				a2 = node.rectangles[j].getArea();
 				aux = inc - (a1+a2);
 				if(aux > max || (aux == max && mininc > inc)){
 					max = aux;
 					mininc = inc;
-					result[0] = rs[i];
-					result[1] = rs[j];
+					result[0] = node.rectangles[i];
+					result[1] = node.rectangles[j];
 				}
 			}
 		}
 		return result;
 	}
-	public static int minIncrement(Rectangle r, Rectangle[] rs){
+	public static int minIncrement(Rectangle r, Node node){
 		int result = -1;
 		double min = Double.MAX_VALUE;
 		double mininc = -1;
 		double aux;
 		double inc, a1, a2;
-		for(int i = 0; i < 4; i++){
-			inc = r.getIncreasedArea(rs[i]);
+		for(int i = 0; i < node.numRectangles; i++){
+			inc = r.getIncreasedArea(node.rectangles[i]);
 			a1 = r.getArea();
-			a2 = rs[i].getArea();
+			a2 = node.rectangles[i].getArea();
 			aux = inc - (a1+a2);
 			if(aux < min || (aux == min && mininc > inc)){
 				min = aux;
@@ -163,25 +162,38 @@ public class RTree extends NodeSize{
 		
 	}
 	public static void main(String[] args) throws IOException{
-		Node node = new Node(0,1);
 		RTree tree = new RTree();
-		tree.saveNode(node);
+		Node node = new Node(0,1);
 		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
 		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
 		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
 		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
-		Rectangle x = new Rectangle(new Vertex(8,8),1,1);
-		tree.insertar(r, 0);
+		//Rectangle x = new Rectangle(new Vertex(8,8),1,1);
+		node.putRectangle(r);
+		node.putRectangle(s);
+		node.putRectangle(t);
+		node.putRectangle(u);
+		tree.saveNode(node);
+		Node node2 = tree.loadNode(0);
+		System.out.println(node.numRectangles);
+		System.out.println(node2.numRectangles);
+		System.out.println(node.rectangles[0].toString());
+		System.out.println(node2.rectangles[0].toString());
+		System.out.println(node.sonsPos[29]);
+		System.out.println(node2.sonsPos[29]);
+		System.out.println(tree.RAMBuf.length);
+		
+		/*tree.insertar(r, 0);
 		tree.insertar(s, 0);
 		tree.insertar(t, 0);
 		tree.insertar(u, 0);
 		tree.insertar(x, 0);
 		tree.buscar(s, 0);
 		Rectangle[] recs;
-		recs = maxIncrement(x, node.rectangles);
+		recs = maxIncrement(x, node);
 		System.out.println(recs[0].toString()+' '+ recs[1].toString());
-		int index = minIncrement(x, node.rectangles);
-		System.out.println(node.rectangles[index].toString());
+		int index = minIncrement(x, node);
+		System.out.println(node.rectangles[index].toString());*/
 		//System.out.println(tree.get(node.getSon(2)));
 	}
 }
