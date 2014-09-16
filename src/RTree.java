@@ -1,14 +1,48 @@
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
-public class RTree{
-	public static int t = 2;
-	private static int maxlvl = 0;
-	private static ArrayList<Rectangle> rectangulos = new ArrayList<Rectangle>();
-	public static boolean intersectAux(Vertex p, Rectangle r){
+import java.io.*;
+public class RTree extends NodeSize{
+	int maxlvl;
+	ArrayList<Rectangle> buscarResult;
+	ArrayList<Long> tree;
+	RandomAccessFile raf;
+	long ExtDir;
+	byte[] RAMBuf;
+	public RTree() throws FileNotFoundException{
+		this.maxlvl = 0;
+		this.buscarResult = new ArrayList<Rectangle>();
+		this.tree = new ArrayList<Long>();
+		this.raf = new RandomAccessFile("rtree.obj","rw");
+		this.ExtDir = 0;
+		this.RAMBuf = new byte[2*B];
+	}
+	public Node loadNode(long pos) throws IOException{
+		readExtMem(pos,RAMBuf);
+		Node n = new Node(RAMBuf);
+		return n;
+	}
+	public void saveNode(Node n) throws IOException{
+		//ExtDir = n.pos;
+		n.nodeBufFill(RAMBuf);
+		writeExtMem(ExtDir, RAMBuf);
+		
+	}
+	private void writeExtMem(long pos, byte[] file) throws IOException{
+		raf.seek(pos);
+		raf.write(file);
+	}
+	
+	private void readExtMem(long pos, byte[] file) throws IOException{
+		raf.seek(pos);
+		raf.read(file);
+	}
+	public boolean intersectAux(Vertex p, Rectangle r){
 		if(p.xpos >= r.v[0].xpos && p.xpos <= r.v[2].xpos && p.ypos >= r.v[0].ypos && p.ypos <= r.v[2].ypos)
 			return true;
 		return false;
 	}
-	public static boolean intersect(Rectangle r1, Rectangle r2){
+	public boolean intersect(Rectangle r1, Rectangle r2){
 		if(r1.v[0].xpos == r2.v[3].xpos || r1.v[0].ypos == r2.v[1].ypos ||
 				r2.v[0].xpos == r1.v[3].xpos || r2.v[0].ypos == r1.v[1].ypos)
 			return false;
@@ -20,42 +54,38 @@ public class RTree{
 			return true;
 		return false;
 	}
-	public static void RTreeHeight(Node root, int lvl){
-		if(lvl > maxlvl)
-			maxlvl = lvl;
-		for(int i = 0; i < 2*t; i++){
-			if(root.sons[i] != null)
-				RTreeHeight(root.sons[i], lvl+1);
+	/*public void RTreeHeight(long root, int lvl){
+		if(lvl > this.maxlvl)
+			this.maxlvl = lvl;
+		for(int i = 0; i < 15; i++){
+			if(tree.get(root).getSonPos(i) < tree.size())
+				RTreeHeight(tree.get(root).getSonPos(i), lvl+1);
 		}
-	}
-	public static void buscarAux(Rectangle r, Node root, int lvl){
-		for(int i = 0; i < 2*t; i++){
-			if(root.rectangles[i] == null)
-				continue;
-			else if(intersect(r,root.rectangles[i]) && root.sons[i] == null && lvl == maxlvl)
-				rectangulos.add(root.rectangles[i]);
-			else if(intersect(r,root.rectangles[i]) && root.sons[i] != null){
+	}*/
+	public void buscar(Rectangle r, long pos) throws IOException{
+		Node aux = loadNode(pos);
+		for(int i = 0; i < aux.numRectangles; i++){
+			long sonDir = aux.sonsPos[i];
+			/*if(aux.rectangles[i] == null)
+				continue;*/
+			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
+				buscarResult.add(aux.rectangles[i]);
+			else if(intersect(r,aux.rectangles[i]) && sonDir >= 0 && aux.isLeaf == 0){
 				for(int j = 0; j < 2*t; j++)
-					buscarAux(r, root.sons[j], lvl+1);
+					buscar(r, aux.sonsPos[j]);
 			}
 		}
 	}
-	public static void buscar(Rectangle r, Node root){
-		maxlvl = 0;
-		RTreeHeight(root, 0);
-		buscarAux(r, root, 0);
-	}
-	public static void insertar(Rectangle r, Node root){
-		int n = root.numRectangles();
-		if(root.isLeaf()){
-			if(n < 4)
-				root.rectangles[n] = r;
-			else
-				System.out.println("Mno");
+	public void insertar(Rectangle r, long pos) throws IOException{
+		Node aux = loadNode(pos);
+		//int n = aux.numRectangles;
+		if(aux.isLeaf == 1){
+			aux.putRectangle(r);
+			saveNode(aux);
 		}
 		else{
-			int index = minIncrement(r, root.rectangles);
-			insertar(r, root.sons[index]);
+			int index = minIncrement(r, aux.rectangles);
+			insertar(r, aux.sonsPos[index]);
 		}
 	}
 	public static Rectangle[] maxIncrement(Rectangle r, Rectangle[] rs){
@@ -129,29 +159,29 @@ public class RTree{
 		}*/
 		return result;
 	}
-	public void QuadraticSplit(Rectangle r, Node node){
+	public void QuadraticSplit(Rectangle r, int node){
 		
 	}
-	public static void main(String[] args){
-		Node node = new Node();
+	public static void main(String[] args) throws IOException{
+		Node node = new Node(0,1);
+		RTree tree = new RTree();
+		tree.saveNode(node);
 		Rectangle r = new Rectangle(new Vertex(0,0),1,1);
 		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
 		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
 		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
 		Rectangle x = new Rectangle(new Vertex(8,8),1,1);
-		insertar(r, node);
-		insertar(s, node);
-		insertar(t, node);
-		insertar(u, node);
-		insertar(x, node);
-		//insertar(u, node);
-		buscar(x, node);
+		tree.insertar(r, 0);
+		tree.insertar(s, 0);
+		tree.insertar(t, 0);
+		tree.insertar(u, 0);
+		tree.insertar(x, 0);
+		tree.buscar(s, 0);
 		Rectangle[] recs;
 		recs = maxIncrement(x, node.rectangles);
-		System.out.println(rectangulos.size());
 		System.out.println(recs[0].toString()+' '+ recs[1].toString());
 		int index = minIncrement(x, node.rectangles);
 		System.out.println(node.rectangles[index].toString());
-		System.out.println(node.isLeaf());
+		//System.out.println(tree.get(node.getSon(2)));
 	}
 }

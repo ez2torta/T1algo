@@ -17,4 +17,10 @@ public class Rectangle{
 	public String toString(){
 		return "("+v[0].xpos+","+v[0].ypos+") "+"("+v[1].xpos+","+v[1].ypos+") "+"("+v[2].xpos+","+v[2].ypos+") "+"("+v[3].xpos+","+v[3].ypos+")";
 	}
+	public void rectBufFill(int pos, byte[] file){
+		for(int i = 0; i < 4; i++){
+			v[i].vertexBufFill(pos, file);
+			pos += 8;
+		}
+	}
 }
