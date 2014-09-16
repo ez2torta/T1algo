@@ -165,24 +165,17 @@ public class RTree extends NodeSize{
 		tree.insertar(t, 0);
 		tree.insertar(u, 0);
 		tree.insertar(x, 0);
-		/*node.putRectangle(r);
-		node.putRectangle(s);
-		node.putRectangle(t);
-		node.putRectangle(u);
 		tree.buscar(s, 0);
-		tree.saveNode(node);*/
 		node = tree.loadNode(0);
-		tree.saveNode(node);
-		System.out.println(node.numRectangles);
-		System.out.println(node.rectangles[2].toString());
-		System.out.println(node.sonsPos[29]);
-		System.out.println(tree.RAMBuf.length);
+		System.out.println("numRectangles: "+node.numRectangles);
+		System.out.println("rect t: "+node.rectangles[2].toString());
+		System.out.println("lastSonPos: "+node.sonsPos[29]);
+		System.out.println("RAMBuf length: "+tree.RAMBuf.length);
 		
-		/*Rectangle[] recs;
+		Rectangle[] recs;
 		recs = maxIncrement(x, node);
-		System.out.println(recs[0].toString()+' '+ recs[1].toString());
+		System.out.println("maxIncrement: "+recs[0].toString()+" - "+ recs[1].toString());
 		int index = minIncrement(x, node);
-		System.out.println(node.rectangles[index].toString());*/
-		//System.out.println(tree.get(node.getSon(2)));
+		System.out.println("minIncrement(x): "+node.rectangles[index].toString());
 	}
 }
