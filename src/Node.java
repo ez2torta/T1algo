@@ -6,6 +6,7 @@ public class Node extends NodeSize{
 	int numRectangles;
 	Rectangle rectangles[];
 	long sonsPos[];
+	long fatherPos;
 	public Node(long pos, int isLeaf){
 		this.pos = pos;
 		this.isLeaf = 1;
@@ -14,6 +15,7 @@ public class Node extends NodeSize{
 		this.sonsPos = new long[2*t];
 		for(int i = 0; i < 2*t; i++)
 			sonsPos[i] = -1L;
+		this.fatherPos = -1L;
 	}
 	public Node(byte[] file){
 		int bytePos = 0;
@@ -24,6 +26,7 @@ public class Node extends NodeSize{
 		bytePos += 4;
 		this.numRectangles = ByteBuffer.wrap(file, bytePos, 4).getInt();
 		bytePos += 4;
+		//System.out.println("coco"+this.isLeaf);
 		this.rectangles =  new Rectangle[2*t];
 		for (int i = 0; i < this.numRectangles; i++) {
 			xmin = ByteBuffer.wrap(file, bytePos, 4).getInt();
@@ -43,6 +46,7 @@ public class Node extends NodeSize{
 			sonsPos[i] =  ByteBuffer.wrap(file, bytePos, 8).getLong();
 			bytePos +=8;
 		}
+		this.fatherPos = ByteBuffer.wrap(file, bytePos, 8).getLong();
 	}
 	public void putRectangle(Rectangle r){
 		if(this.numRectangles < 2*t){
@@ -85,14 +89,15 @@ public class Node extends NodeSize{
 			ByteBuffer.wrap(file, bytePos, 8).putLong(this.sonsPos[i]);
 			bytePos +=8;
 		}
+		ByteBuffer.wrap(file, bytePos, 8).putLong(this.fatherPos);
 	}
 	public Rectangle getMBR(){
 		if(this.numRectangles == 0)
 			return null;
-		int xmin = this.rectangles[0].v[0].xpos;
-		int ymin = this.rectangles[0].v[0].ypos;
-		int xmax = this.rectangles[0].v[2].xpos;
-		int ymax = this.rectangles[0].v[2].ypos;
+		int xmin = Integer.MAX_VALUE;
+		int ymin = Integer.MAX_VALUE;
+		int xmax = 0;
+		int ymax = 0;
 		for(int i = 1; i < this.numRectangles; i++){
 			if (this.rectangles[i].v[0].xpos < xmin)
 				xmin = this.rectangles[i].v[0].xpos;

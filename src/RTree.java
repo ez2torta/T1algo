@@ -14,7 +14,7 @@ public class RTree extends NodeSize{
 		this.buscarResult = new ArrayList<Rectangle>();
 		this.tree = new ArrayList<Long>();
 		this.raf = new RandomAccessFile("rtree.obj","rw");
-		this.nextDir = 0;
+		this.nextDir = 1;
 		this.RAMBuf = new byte[2*B];
 	}
 	public Node nodeToRAM(long pos) throws IOException{
@@ -27,6 +27,7 @@ public class RTree extends NodeSize{
 		writeExtMem(n.pos, RAMBuf);
 	}
 	private void writeExtMem(long pos, byte[] file) throws IOException{
+		System.out.println("pepe "+pos);
 		raf.seek(pos);
 		raf.write(file);
 	}
@@ -54,6 +55,12 @@ public class RTree extends NodeSize{
 	}
 	public void buscar(Rectangle r, long pos) throws IOException{
 		Node aux = nodeToRAM(pos);
+		/*for(int i = 0; i < 2*t; i++){
+			if(aux.rectangles[i] == null)
+				System.out.println("paf");
+			else
+				System.out.println(aux.rectangles[i].toString());
+		}*/
 		for(int i = 0; i < aux.numRectangles; i++){
 			long sonDir = aux.sonsPos[i];
 			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
@@ -72,7 +79,7 @@ public class RTree extends NodeSize{
 				nodeToExt(aux);
 			}
 			else{
-				System.out.println("kek");
+				this.QuadraticSplit(r, aux);
 			}
 		}
 		else{
@@ -151,52 +158,104 @@ public class RTree extends NodeSize{
 		}*/
 		return result;
 	}
-	public void QuadraticSplit(Rectangle r, Node node){
-		int[] maxRs = this.maxIncrement(r, node);
-		Node son1 = new Node(nextDir,node.isLeaf);
-		nextDir++;
-		Node son2 = new Node(nextDir,node.isLeaf);
-		nextDir++;
-		/* Si el rectángulo a insertarse no es semilla, se mete al arreglo en lugar de la semilla. */
-		if(maxRs[0] != -1)
-			node.rectangles[maxRs[0]] = r;
-		/* Se borra del arreglo el otro nodo semilla. */
-		node.rectangles[maxRs[1]] = null;
-		/* Se guardan las semillas en los nodos nuevos. */
-		if(maxRs[0] == -1)
-			son1.putRectangle(r);
-		else
-			son1.putRectangle(node.rectangles[maxRs[0]]);
-		son2.putRectangle(node.rectangles[maxRs[1]]);
-		int bestDif = -1;
-		int g1, g2;
-		for(int i = 0; i < 2*t; i++){
-			if(son1.numRectangles == t+1){
-				for(int j = i; j < 2*t+1; i++){
-					if(node.rectangles[j] != null)
-						son2.putRectangle(node.rectangles[j]);
+	public void QuadraticSplit(Rectangle r, Node node) throws IOException{
+		if(node.numRectangles >= 2*t){
+			int[] maxRs = this.maxIncrement(r, node);
+			Node son1 = new Node(nextDir,node.isLeaf);
+			nextDir++;
+			Node son2 = new Node(nextDir,node.isLeaf);
+			nextDir++;
+			/* Si el rectángulo a insertarse no es semilla, se mete al arreglo en lugar de la semilla. */
+			if(maxRs[0] != -1)
+				node.rectangles[maxRs[0]] = r;
+			/* Se guardan las semillas en los nodos nuevos. */
+			if(maxRs[0] == -1)
+				son1.putRectangle(r);
+			else
+				son1.putRectangle(node.rectangles[maxRs[0]]);
+			son2.putRectangle(node.rectangles[maxRs[1]]);
+			/* Se borra del arreglo el otro nodo semilla. */
+			node.rectangles[maxRs[1]] = null;
+			int bestDif = -1;
+			int bestInd = 0;
+			int g1 = 0;
+			int g2 = 0;
+			for(int i = 0; i < 2*t; i++){
+				if(son1.numRectangles == t+1){
+					for(int j = 0; j < 2*t; j++){
+						if(node.rectangles[j] != null)
+							son2.putRectangle(node.rectangles[j]);
+					}
+					break;
 				}
-				return;
-			}
-			else if(son2.numRectangles == t+1){
-				for(int j = i; j < 2*t+1; i++){
-					if(node.rectangles[j] != null)
-						son1.putRectangle(node.rectangles[j]);
+				else if(son2.numRectangles == t+1){
+					for(int j = 0; j < 2*t; j++){
+						if(node.rectangles[j] != null)
+							son1.putRectangle(node.rectangles[j]);
+					}
+					break;
 				}
-				return;
+				for(int j = 0; j < 2*t; j++){
+					if(node.rectangles[j] == null)
+						continue;
+					if(son1.numRectangles > 0)
+						g1 = son1.getMBR().getIncreasedArea(node.rectangles[j]) - son1.getMBR().getArea();
+					if(son2.numRectangles > 0)
+						g2 = son2.getMBR().getIncreasedArea(node.rectangles[j]) - son2.getMBR().getArea();
+					if(Math.abs(g1-g2) > bestDif){
+						bestDif = Math.abs(g1-g2);
+						bestInd = j;
+					}
+				}
+				if(g1 < g2)
+					son1.putRectangle(node.rectangles[bestInd]);
+				else if(g2 < g1)
+					son2.putRectangle(node.rectangles[bestInd]);
+				else if(son1.getMBR().getArea() < son2.getMBR().getArea())
+					son1.putRectangle(node.rectangles[bestInd]);
+				else if(son1.getMBR().getArea() < son2.getMBR().getArea())
+					son2.putRectangle(node.rectangles[bestInd]);
+				else if(son1.numRectangles < son2.numRectangles)
+					son1.putRectangle(node.rectangles[bestInd]);
+				else
+					son2.putRectangle(node.rectangles[bestInd]);
+				node.rectangles[bestInd] = null;
+				bestDif = -1;
 			}
-			for(int j = i+1; j < 2*t+1; j++){
-				g1 = son1.areaMBR();
+			if(node.fatherPos == -1){ // si es la raiz
+				Node newRoot = new Node(node.pos,0);
+				newRoot.fatherPos = node.fatherPos;
+				newRoot.putRectangle(son1.getMBR());
+				newRoot.putRectangle(son2.getMBR());
+				son1.fatherPos = newRoot.pos;
+				son2.fatherPos = newRoot.pos;
+				newRoot.sonsPos[0] = son1.pos;
+				newRoot.sonsPos[1] = son2.pos;
+				this.nodeToExt(newRoot);
+				this.nodeToExt(son1); //guardar nodos
+				this.nodeToExt(son2);
 			}
-		}	
-		if(node.pos == 0){ // si es la raiz
-			Node newRoot = new Node(0,0);
-			newRoot.sonsPos[0] = son1.pos;
-			newRoot.sonsPos[1] = son2.pos;
+			else{
+				Node aux = this.nodeToRAM(node.fatherPos);
+				for(int i = 0; i < aux.numRectangles; i++){
+					if(aux.sonsPos[i] == node.pos){
+						son1.pos = aux.sonsPos[i];
+						this.nodeToExt(son1); //guardar nodos
+						this.nodeToExt(son2);
+						aux.putRectangle(son1.getMBR());
+						if(aux.numRectangles < 2*t)
+							aux.putRectangle(son2.getMBR());
+						this.QuadraticSplit(son2.getMBR(), aux);
+						break;
+					}
+				}
+			}
 		}
+		else
+			node.putRectangle(r);
 	}
 	public int numRandom(int min, int max){
-		return ((int)(Math.random()*max-min));
+		return ((int)(Math.random()*max-min+1));
 	}
 	public static void main(String[] args) throws IOException{
 		RTree tree = new RTree();
@@ -215,7 +274,7 @@ public class RTree extends NodeSize{
 		tree.buscar(s, 0);*/
 		int x1,y1,w,h;
 		Rectangle r;
-		for(int i = 0; i < 2*tree.t; i++){
+		for(int i = 0; i < 2*tree.t+1; i++){
 			x1 = tree.numRandom(0, 90);
 			y1 = tree.numRandom(0, 90);
 			w = tree.numRandom(0, 10);
@@ -229,6 +288,7 @@ public class RTree extends NodeSize{
 			System.out.println("Node "+i+": "+node.rectangles[i].toString());
 		for(int i = 0; i < tree.buscarResult.size(); i++)
 			System.out.println("buscarResult "+i+": "+tree.buscarResult.get(i));
+		System.out.println(node.sonsPos[0]);
 		/*System.out.println("numRectangles: "+node.numRectangles);
 		System.out.println("rect t: "+node.rectangles[2].toString());
 		System.out.println("lastSonPos: "+node.sonsPos[29]);
