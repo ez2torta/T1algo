@@ -47,6 +47,7 @@ public class Node extends NodeSize{
 			bytePos +=8;
 		}
 		this.fatherPos = ByteBuffer.wrap(file, bytePos, 8).getLong();
+		
 	}
 	public void putRectangle(Rectangle r){
 		if(this.numRectangles < 2*t){
@@ -90,6 +91,8 @@ public class Node extends NodeSize{
 			bytePos +=8;
 		}
 		ByteBuffer.wrap(file, bytePos, 8).putLong(this.fatherPos);
+		if(this.numRectangles == t)
+			System.out.println("bytes: "+(bytePos+8));
 	}
 	public Rectangle getMBR(){
 		if(this.numRectangles == 0)

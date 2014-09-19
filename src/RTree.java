@@ -14,20 +14,21 @@ public class RTree extends NodeSize{
 		this.buscarResult = new ArrayList<Rectangle>();
 		this.tree = new ArrayList<Long>();
 		this.raf = new RandomAccessFile("rtree.obj","rw");
-		this.nextDir = 1;
+		this.nextDir = 2*B;
 		this.RAMBuf = new byte[2*B];
 	}
 	public Node nodeToRAM(long pos) throws IOException{
 		readExtMem(pos,RAMBuf);
 		Node n = new Node(RAMBuf);
+		//System.out.println("read "+pos);
 		return n;
 	}
 	public void nodeToExt(Node n) throws IOException{
 		n.nodeBufFill(RAMBuf);
 		writeExtMem(n.pos, RAMBuf);
+		//System.out.println("write "+n.pos);
 	}
 	private void writeExtMem(long pos, byte[] file) throws IOException{
-		System.out.println("pepe "+pos);
 		raf.seek(pos);
 		raf.write(file);
 	}
@@ -55,14 +56,15 @@ public class RTree extends NodeSize{
 	}
 	public void buscar(Rectangle r, long pos) throws IOException{
 		Node aux = nodeToRAM(pos);
-		/*for(int i = 0; i < 2*t; i++){
+		for(int i = 0; i < aux.numRectangles; i++){
 			if(aux.rectangles[i] == null)
 				System.out.println("paf");
 			else
-				System.out.println(aux.rectangles[i].toString());
-		}*/
+				System.out.println("en buscar: "+aux.rectangles[i].toString());
+		}
 		for(int i = 0; i < aux.numRectangles; i++){
 			long sonDir = aux.sonsPos[i];
+			//System.out.println("sonDir: "+sonDir);
 			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
 				buscarResult.add(aux.rectangles[i]);
 			else if(intersect(r,aux.rectangles[i]) && sonDir >= 0 && aux.isLeaf == 0){
@@ -162,9 +164,9 @@ public class RTree extends NodeSize{
 		if(node.numRectangles >= 2*t){
 			int[] maxRs = this.maxIncrement(r, node);
 			Node son1 = new Node(nextDir,node.isLeaf);
-			nextDir++;
+			nextDir += 2*B;
 			Node son2 = new Node(nextDir,node.isLeaf);
-			nextDir++;
+			nextDir += 2*B;
 			/* Si el rectángulo a insertarse no es semilla, se mete al arreglo en lugar de la semilla. */
 			if(maxRs[0] != -1)
 				node.rectangles[maxRs[0]] = r;
@@ -184,6 +186,7 @@ public class RTree extends NodeSize{
 				if(son1.numRectangles == t+1){
 					for(int j = 0; j < 2*t; j++){
 						if(node.rectangles[j] != null)
+							//System.out.println("lastInsert "+i+": "+j);
 							son2.putRectangle(node.rectangles[j]);
 					}
 					break;
@@ -191,6 +194,7 @@ public class RTree extends NodeSize{
 				else if(son2.numRectangles == t+1){
 					for(int j = 0; j < 2*t; j++){
 						if(node.rectangles[j] != null)
+							//System.out.println("lastInsert "+i+": "+j);
 							son1.putRectangle(node.rectangles[j]);
 					}
 					break;
@@ -207,6 +211,7 @@ public class RTree extends NodeSize{
 						bestInd = j;
 					}
 				}
+				//System.out.println("bestInd "+i+": "+bestInd);
 				if(g1 < g2)
 					son1.putRectangle(node.rectangles[bestInd]);
 				else if(g2 < g1)
@@ -261,17 +266,6 @@ public class RTree extends NodeSize{
 		RTree tree = new RTree();
 		Node node = new Node(0,1);
 		tree.nodeToExt(node);
-		/*Rectangle r = new Rectangle(new Vertex(0,0),4,4);
-		Rectangle s = new Rectangle(new Vertex(3,3),1,1);
-		Rectangle t = new Rectangle(new Vertex(9,9),1,1);
-		Rectangle u = new Rectangle(new Vertex(10,10),1,1);
-		Rectangle x = new Rectangle(new Vertex(8,8),1,1);
-		tree.insertar(r, 0);
-		tree.insertar(s, 0);
-		tree.insertar(t, 0);
-		tree.insertar(u, 0);
-		tree.insertar(x, 0);
-		tree.buscar(s, 0);*/
 		int x1,y1,w,h;
 		Rectangle r;
 		for(int i = 0; i < 2*tree.t+1; i++){
@@ -282,23 +276,13 @@ public class RTree extends NodeSize{
 			r = new Rectangle(new Vertex(x1,y1),w,h);
 			tree.insertar(r, 0);
 		}
-		tree.buscar(new Rectangle(new Vertex(0,0),20,20),0);
+		tree.buscar(new Rectangle(new Vertex(0,0),100,100),0);
 		node = tree.nodeToRAM(0);
-		for(int i = 0; i < 2*tree.t; i++)
+		for(int i = 0; i < node.numRectangles; i++)
 			System.out.println("Node "+i+": "+node.rectangles[i].toString());
+		System.out.println("buscarResultSize: "+tree.buscarResult.size());
 		for(int i = 0; i < tree.buscarResult.size(); i++)
-			System.out.println("buscarResult "+i+": "+tree.buscarResult.get(i));
+			System.out.println("buscarResult "+i+": "+tree.buscarResult.get(i).toString());
 		System.out.println(node.sonsPos[0]);
-		/*System.out.println("numRectangles: "+node.numRectangles);
-		System.out.println("rect t: "+node.rectangles[2].toString());
-		System.out.println("lastSonPos: "+node.sonsPos[29]);
-		System.out.println("RAMBuf length: "+tree.RAMBuf.length);
-		System.out.println("buscarResult: "+tree.buscarResult.size());
-		Rectangle[] recs;
-		recs = tree.maxIncrement(x, node);
-		System.out.println("maxIncrement: "+recs[0].toString()+" - "+ recs[1].toString());
-		int index = tree.minIncrement(x, node);
-		System.out.println("minIncrement(x): "+node.rectangles[index].toString());*/
-		//System.out.println(tree.numRandom(0,100));
 	}
 }
