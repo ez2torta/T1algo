@@ -91,8 +91,8 @@ public class Node extends NodeSize{
 			bytePos +=8;
 		}
 		ByteBuffer.wrap(file, bytePos, 8).putLong(this.fatherPos);
-		if(this.numRectangles == t)
-			System.out.println("bytes: "+(bytePos+8));
+		/*if(this.numRectangles == t)
+			System.out.println("bytes: "+(bytePos+8));*/
 	}
 	public Rectangle getMBR(){
 		if(this.numRectangles == 0)

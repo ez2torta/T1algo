@@ -56,20 +56,20 @@ public class RTree extends NodeSize{
 	}
 	public void buscar(Rectangle r, long pos) throws IOException{
 		Node aux = nodeToRAM(pos);
-		for(int i = 0; i < aux.numRectangles; i++){
+		/*for(int i = 0; i < aux.numRectangles; i++){
 			if(aux.rectangles[i] == null)
 				System.out.println("paf");
 			else
 				System.out.println("en buscar: "+aux.rectangles[i].toString());
-		}
+		}*/
 		for(int i = 0; i < aux.numRectangles; i++){
-			long sonDir = aux.sonsPos[i];
+			//long sonDir = aux.sonsPos[i];
 			//System.out.println("sonDir: "+sonDir);
-			if(intersect(r,aux.rectangles[i]) && sonDir < 0 && aux.isLeaf == 1)
+			if(intersect(r,aux.rectangles[i]) && aux.isLeaf == 1)
 				buscarResult.add(aux.rectangles[i]);
-			else if(intersect(r,aux.rectangles[i]) && sonDir >= 0 && aux.isLeaf == 0){
-				for(int j = 0; j < 2*t; j++)
-					buscar(r, aux.sonsPos[j]);
+			else if(intersect(r,aux.rectangles[i]) && aux.isLeaf == 0){
+				buscar(r, aux.sonsPos[i]);
+				//System.out.println("spos "+aux.sonsPos[i]);
 			}
 		}
 	}
@@ -234,6 +234,7 @@ public class RTree extends NodeSize{
 				newRoot.putRectangle(son2.getMBR());
 				son1.fatherPos = newRoot.pos;
 				son2.fatherPos = newRoot.pos;
+				newRoot.isLeaf = 0;
 				newRoot.sonsPos[0] = son1.pos;
 				newRoot.sonsPos[1] = son2.pos;
 				this.nodeToExt(newRoot);
@@ -277,9 +278,9 @@ public class RTree extends NodeSize{
 			tree.insertar(r, 0);
 		}
 		tree.buscar(new Rectangle(new Vertex(0,0),100,100),0);
-		node = tree.nodeToRAM(0);
+		node = tree.nodeToRAM(8192);
 		for(int i = 0; i < node.numRectangles; i++)
-			System.out.println("Node "+i+": "+node.rectangles[i].toString());
+			System.out.println("Rectangle "+i+": "+node.rectangles[i].toString());
 		System.out.println("buscarResultSize: "+tree.buscarResult.size());
 		for(int i = 0; i < tree.buscarResult.size(); i++)
 			System.out.println("buscarResult "+i+": "+tree.buscarResult.get(i).toString());
